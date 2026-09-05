@@ -14,7 +14,7 @@ Extract slide text, text hyperlinks, and optional image OCR from Keynote and Pow
 
 [切換至繁體中文](#繁體中文)
 
-Keynote Text Extractor reads each slide through Keynote and writes the extracted content to a UTF-8 text file. It supports native slide text, text hyperlinks, tables, grouped objects, skipped slides, and optional OCR through a macOS Shortcut.
+Keynote Text Extractor reads each slide from Keynote (`.key`) and PowerPoint (`.pptx`) presentations through Keynote, then writes the extracted content to a UTF-8 text file. It supports native slide text, text hyperlinks, tables, grouped objects, skipped slides, and optional OCR through a macOS Shortcut.
 
 <a id="en-features"></a>
 
@@ -172,7 +172,7 @@ The extractor was exercised with the 29-slide reference Keynote deck and with it
 
 [Switch to English](#english)
 
-Keynote Text Extractor 會透過 Keynote 逐頁讀取簡報，並將內容寫入 UTF-8 文字檔。它支援原生投影片文字、文字超連結、表格、群組物件、略過的投影片，以及透過 macOS 捷徑執行的選用圖片 OCR。
+Keynote Text Extractor 會透過 Keynote 逐頁讀取 Keynote (`.key`) 與 PowerPoint (`.pptx`) 簡報，再將內容寫入 UTF-8 文字檔。它支援原生投影片文字、文字超連結、表格、群組物件、略過的投影片，以及透過 macOS 捷徑執行的選用圖片 OCR。
 
 <a id="zh-features"></a>
 
