@@ -51,6 +51,14 @@ Microsoft PowerPoint and Python are not required to run the extractor. Python 3 
 
 The compiled `.scpt` contains the extraction core. Regular users only need this one file.
 
+**Open the script in Script Editor and click Run.**
+
+![ExtractKeynoteText.scpt open in macOS Script Editor, with the Run button in the toolbar](docs/images/script-editor.png)
+
+**Choose image OCR, skip images, or export image files.**
+
+![Image processing dialog with OCR, skip, and export options, plus Cancel and Continue buttons](docs/images/image-processing-options.png)
+
 ### Terminal usage
 
 Run with image OCR:
@@ -216,6 +224,14 @@ Keynote Text Extractor 會透過 Keynote 逐頁讀取 Keynote (`.key`) 與 Power
 6. 選擇一個新的 `.txt` 輸出檔案。
 
 編譯完成的 `.scpt` 已內嵌擷取核心，一般使用者只需要這一個檔案。
+
+**使用「腳本編輯器」開啟腳本，按工具列的「執行」。**
+
+![腳本編輯器開啟 ExtractKeynoteText.scpt，工具列上有執行按鈕](docs/images/script-editor.png)
+
+**選擇「辨識圖片」、「跳過圖片」或「取出圖片」。**
+
+![圖片處理選擇視窗，提供辨識圖片、跳過圖片、取出圖片，以及取消與繼續按鈕](docs/images/image-processing-options.png)
 
 ### 終端機操作
 
