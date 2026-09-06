@@ -22,7 +22,9 @@ on run argv
 		if argumentCount = 0 then
 			set sourceFile to choose file with prompt "選擇要擷取文字的 Keynote 或 PowerPoint 簡報" of type {"key", "pptx"}
 			set sourcePath to POSIX path of sourceFile
-			set imageChoice to button returned of (display dialog "是否辨識投影片中的圖片文字？" buttons {"取消", "跳過圖片", "辨識圖片"} default button "辨識圖片" cancel button "取消")
+			set imageChoices to choose from list {"辨識圖片", "跳過圖片", "取出圖片"} with prompt "請選擇圖片處理方式（取出圖片會存檔，不執行 OCR）：" default items {"辨識圖片"} OK button name "繼續" cancel button name "取消" multiple selections allowed false empty selection allowed false
+			if imageChoices is false then return
+			set imageChoice to item 1 of imageChoices
 			set sourceName to name of (info for sourceFile)
 			if sourceName ends with ".key" then set sourceName to text 1 thru -5 of sourceName
 			if sourceName ends with ".pptx" then set sourceName to text 1 thru -6 of sourceName
@@ -30,8 +32,9 @@ on run argv
 			set outputFile to choose file name with prompt "儲存擷取結果（請使用新檔名）" default name (sourceName & "_文字.txt") default location ((POSIX file sourceFolder) as alias)
 			set workerArgs to {sourcePath, POSIX path of outputFile}
 			if imageChoice is "跳過圖片" then set end of workerArgs to "--skip-images"
+			if imageChoice is "取出圖片" then set end of workerArgs to "--export-images"
 		else
-			if argumentCount > 3 then error "用法：osascript ExtractKeynoteText.applescript 輸入.key或.pptx [輸出.txt] [--skip-images]"
+			if argumentCount > 3 then error "用法：osascript ExtractKeynoteText.applescript 輸入.key或.pptx [輸出.txt] [--skip-images | --export-images]"
 			set workerArgs to argv
 		end if
 		set workDir to do shell script "/usr/bin/mktemp -d /tmp/keynote-launcher.XXXXXXXX"

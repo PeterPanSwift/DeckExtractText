@@ -15,7 +15,9 @@ on run argv
 		if argumentCount = 0 then
 			set sourceFile to choose file with prompt "選擇要擷取文字的 Keynote 或 PowerPoint 簡報" of type {"key", "pptx"}
 			set sourcePath to POSIX path of sourceFile
-			set imageChoice to button returned of (display dialog "是否辨識投影片中的圖片文字？" buttons {"取消", "跳過圖片", "辨識圖片"} default button "辨識圖片" cancel button "取消")
+			set imageChoices to choose from list {"辨識圖片", "跳過圖片", "取出圖片"} with prompt "請選擇圖片處理方式（取出圖片會存檔，不執行 OCR）：" default items {"辨識圖片"} OK button name "繼續" cancel button name "取消" multiple selections allowed false empty selection allowed false
+			if imageChoices is false then return
+			set imageChoice to item 1 of imageChoices
 			set sourceName to name of (info for sourceFile)
 			if sourceName ends with ".key" then set sourceName to text 1 thru -5 of sourceName
 			if sourceName ends with ".pptx" then set sourceName to text 1 thru -6 of sourceName
@@ -23,8 +25,9 @@ on run argv
 			set outputFile to choose file name with prompt "儲存擷取結果（請使用新檔名）" default name (sourceName & "_文字.txt") default location ((POSIX file sourceFolder) as alias)
 			set workerArgs to {sourcePath, POSIX path of outputFile}
 			if imageChoice is "跳過圖片" then set end of workerArgs to "--skip-images"
+			if imageChoice is "取出圖片" then set end of workerArgs to "--export-images"
 		else
-			if argumentCount > 3 then error "用法：osascript ExtractKeynoteText.applescript 輸入.key或.pptx [輸出.txt] [--skip-images]"
+			if argumentCount > 3 then error "用法：osascript ExtractKeynoteText.applescript 輸入.key或.pptx [輸出.txt] [--skip-images | --export-images]"
 			set workerArgs to argv
 		end if
 		set workDir to do shell script "/usr/bin/mktemp -d /tmp/keynote-launcher.XXXXXXXX"
@@ -86,10 +89,16 @@ on run argv
 		set argumentCount to 0
 	end try
 	set processImages to true
+	set exportImages to false
+	set skipImages to false
 	set inputArgs to {}
 	repeat with argumentText in argv
 		if (argumentText as text) is \"--skip-images\" then
 			set processImages to false
+			set skipImages to true
+		else if (argumentText as text) is \"--export-images\" then
+			set processImages to false
+			set exportImages to true
 		else
 			set end of inputArgs to argumentText as text
 		end if
@@ -105,11 +114,19 @@ on run argv
 	set tempDir to \"\"
 	set reportPath to \"\"
 	set reportText to \"\"
+	set imageFolder to \"\"
+	set exportedImageCount to 0
 	set interactiveMode to argumentCount = 0
 	try
-		if argumentCount > 2 then error \"用法：osascript ExtractKeynoteText.applescript 輸入.key或.pptx [輸出.txt] [--skip-images]\"
+		if skipImages and exportImages then error \"--skip-images 與 --export-images 不可同時使用。\"
+		if argumentCount > 2 then error \"用法：osascript ExtractKeynoteText.applescript 輸入.key或.pptx [輸出.txt] [--skip-images | --export-images]\"
 		if interactiveMode then
 			set sourceFile to choose file with prompt \"選擇要擷取文字的 Keynote 或 PowerPoint 簡報\" of type {\"key\", \"pptx\"}
+			set imageChoices to choose from list {\"辨識圖片\", \"跳過圖片\", \"取出圖片\"} with prompt \"請選擇圖片處理方式（取出圖片會存檔，不執行 OCR）：\" default items {\"辨識圖片\"} OK button name \"繼續\" cancel button name \"取消\" multiple selections allowed false empty selection allowed false
+			if imageChoices is false then return
+			set processImages to (item 1 of imageChoices) is \"辨識圖片\"
+			set exportImages to (item 1 of imageChoices) is \"取出圖片\"
+			if processImages then set ocrCache to current application's NSMutableDictionary's dictionary()
 		else
 			set sourceFile to (POSIX file (my absolutePath(item 1 of argv))) as alias
 		end if
@@ -150,6 +167,9 @@ on run argv
 			if (pageIDs's |count|() as integer) is not pageCount then error \"Keynote 與匯出 PPTX 頁數不同，已停止，避免將內容配到錯頁。\"
 			if processImages then
 				set imageModeText to \"OCR 捷徑：\" & shortcutName
+		else if exportImages then
+			set imageFolder to my createImageFolder(reportPath)
+			set imageModeText to \"圖片處理：取出圖片\" & linefeed & \"圖片資料夾：\" & imageFolder
 		else
 			set imageModeText to \"圖片處理：已跳過\"
 		end if
@@ -174,15 +194,24 @@ on run argv
 				set pagePath to my relatedPath(presentationRels, pageID, presentationPath, packageRoot)
 				set hyperlinkText to my pageHyperlinks(pagePath)
 				if hyperlinkText is not \"\" then set pageText to pageText & linefeed & hyperlinkText
-				if processImages then
+				if processImages or exportImages then
 					set mediaPaths to my pageImages(pagePath, packageRoot)
 				set imageText to \"\"
 				repeat with imageIndex from 1 to count of mediaPaths
 					set imageCount to imageCount + 1
 					set mediaPath to item imageIndex of mediaPaths
-					set ocrText to my recognizeImage(mediaPath, tempDir)
-					if ocrText does not start with \"【OCR 失敗】\" and ocrText does not start with \"【警告】\" then
-						if my hasOCRText(ocrText) then set imageText to imageText & \"[圖片 \" & imageIndex & \"]\" & linefeed & ocrText & linefeed & linefeed
+					if exportImages then
+						set imageName to my exportImage(mediaPath, imageFolder, pageIndex, imageIndex)
+						if imageName is not \"\" then
+							set exportedImageCount to exportedImageCount + 1
+							set folderName to (current application's NSString's stringWithString:imageFolder)'s lastPathComponent() as text
+							set imageText to imageText & \"[圖片 \" & imageIndex & \"] \" & folderName & \"/\" & imageName & linefeed
+						end if
+					else
+						set ocrText to my recognizeImage(mediaPath, tempDir)
+						if ocrText does not start with \"【OCR 失敗】\" and ocrText does not start with \"【警告】\" then
+							if my hasOCRText(ocrText) then set imageText to imageText & \"[圖片 \" & imageIndex & \"]\" & linefeed & ocrText & linefeed & linefeed
+						end if
 					end if
 				end repeat
 				if imageText is not \"\" then set pageText to pageText & linefeed & imageText
@@ -193,6 +222,7 @@ on run argv
 		set reportText to my replaceText(reportText, \"狀態：處理中（每頁完成後更新）\", \"狀態：完成\")
 		set reportText to reportText & linefeed & \"===== 擷取統計 =====\" & linefeed & \"投影片：\" & pageCount & linefeed
 		if processImages then set reportText to reportText & \"各頁圖片合計（同頁相同檔案只算一次）：\" & imageCount & linefeed
+		if exportImages then set reportText to reportText & \"已取出圖片：\" & exportedImageCount & linefeed
 		set reportText to reportText & \"實際執行 OCR：\" & ocrRunCount & linefeed & \"警告：\" & warningCount & linefeed
 		my writeUTF8(reportText, reportPath)
 		my cleanup(tempDir)
@@ -209,6 +239,40 @@ on run argv
 		error errorMessage number errorNumber
 	end try
 end run
+
+-- 資料夾與 TXT 同層；已有同名資料夾或檔案時另取新名。
+on createImageFolder(reportPath)
+	set basePath to ((current application's NSString's stringWithString:reportPath)'s stringByDeletingPathExtension() as text) & \"_圖片\"
+	set candidatePath to basePath
+	set suffix to 2
+	repeat while (fm's fileExistsAtPath:candidatePath) as boolean
+		set candidatePath to basePath & \"_\" & suffix
+		set suffix to suffix + 1
+	end repeat
+	do shell script \"/bin/mkdir \" & quoted form of candidatePath
+	return candidatePath
+end createImageFolder
+
+on exportImage(mediaPath, imageFolder, pageIndex, imageIndex)
+	if mediaPath starts with \"WARNING:\" then return \"\"
+	set extensionText to (current application's NSString's stringWithString:mediaPath)'s pathExtension() as text
+	set imageName to \"page_\" & my paddedIndex(pageIndex) & \"_image_\" & my paddedIndex(imageIndex)
+	if extensionText is not \"\" then set imageName to imageName & \".\" & extensionText
+	set {didCopy, copyError} to fm's copyItemAtPath:mediaPath toPath:(imageFolder & \"/\" & imageName) |error|:(reference)
+	if not (didCopy as boolean) then
+		set warningCount to warningCount + 1
+		return \"\"
+	end if
+	return imageName
+end exportImage
+
+on paddedIndex(indexValue)
+	set indexText to indexValue as text
+	repeat while (count of indexText) < 3
+		set indexText to \"0\" & indexText
+	end repeat
+	return indexText
+end paddedIndex
 
 -- 直接巡訪 Keynote 物件；預設標題、內文亦在 iWork items 之中，
 -- 不再另外讀一次，避免重複。群組必須遞迴。

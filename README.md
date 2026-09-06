@@ -23,7 +23,7 @@ Keynote Text Extractor reads each slide from Keynote (`.key`) and PowerPoint (`.
 - Opens `.key` and `.pptx` presentations through Keynote.
 - Extracts text from titles, body placeholders, text boxes, shapes, tables, and grouped objects.
 - Lists text hyperlinks on their corresponding slides.
-- Lets you process images with the **提取圖片文字** Shortcut or skip images entirely.
+- Choose image OCR with the **提取圖片文字** Shortcut, skip images, or export image files without OCR.
 - Omits empty OCR results, `未辨識到文字`, OCR failures, and image-processing warnings from the output body.
 - Updates the output file after every completed slide, so partial progress is retained if processing stops.
 - Leaves the source presentation unchanged.
@@ -46,7 +46,7 @@ Microsoft PowerPoint and Python are not required to run the extractor. Python 3 
 2. Open it with **Script Editor**.
 3. Click **Run**.
 4. Select a `.key` or `.pptx` presentation.
-5. Choose **辨識圖片** to run image OCR, or **跳過圖片** to ignore every image.
+5. Select **辨識圖片** (OCR), **跳過圖片** (skip), or **取出圖片** (export image files), then click **繼續**.
 6. Choose a new `.txt` output file.
 
 The compiled `.scpt` contains the extraction core. Regular users only need this one file.
@@ -77,6 +77,14 @@ Choose the output path explicitly:
 osascript ExtractKeynoteText.scpt '/path/to/presentation.key' '/path/to/result.txt'
 ```
 
+Export images without OCR:
+
+```sh
+osascript ExtractKeynoteText.scpt '/path/to/presentation.pptx' '/path/to/result.txt' --export-images
+```
+
+This creates `result_圖片/` beside `result.txt`. Files are named by slide and image number, for example `page_003_image_001.png`, retaining the exported media format. Each slide's TXT section lists relative paths such as `[圖片 1] result_圖片/page_003_image_001.png`. Keep the TXT and image folder together when moving them. If the folder name exists, a new suffix is added. Images are saved regardless of whether they contain text; this mode needs no OCR Shortcut and does not access the clipboard. Do not combine `--export-images` with `--skip-images`.
+
 Without an explicit output path, the script creates `<presentation>_文字.txt`. If that name exists, it selects `_文字_2.txt`, `_文字_3.txt`, and so on. An explicitly selected output path must not already exist.
 
 <a id="en-output"></a>
@@ -97,7 +105,7 @@ Course website
 Text recognized from the second image
 ```
 
-Image entries appear only when OCR returns useful text. The script deliberately excludes the `【圖片 OCR】` heading, no-text responses, OCR errors, and image-processing warnings.
+In OCR mode, image entries appear only when OCR returns useful text. Export mode lists successfully saved image paths instead. The script deliberately excludes the `【圖片 OCR】` heading, no-text responses, OCR errors, and image-processing warnings. Failed image copies contribute to the warning count; partial image exports remain available if extraction stops.
 
 <a id="en-shortcut"></a>
 
@@ -120,7 +128,7 @@ The `--skip-images` option does not inspect images, check the Shortcut, run OCR,
 1. Keynote opens the source presentation and exposes native slide objects through AppleScript.
 2. The script exports a temporary PPTX snapshot and unpacks it with macOS `ditto`.
 3. It follows `presentation.xml` relationships to preserve slide order and associates text hyperlinks and embedded images with the correct slide.
-4. When OCR is enabled, it processes each slide's referenced images and caches shared media results.
+4. In OCR mode, it processes each slide's referenced images and caches shared media results. In export mode, it copies those images into the output folder; the same media referenced on different slides gets a separate filename for each slide. Duplicate references on one slide are saved once.
 5. It writes progress after each slide and removes temporary files after a normal completion.
 
 This snapshot approach avoids unreliable image `file` properties in Keynote's AppleScript interface and distinguishes multiple images that share the same filename.
@@ -132,7 +140,7 @@ This snapshot approach avoids unreliable image `file` properties in Keynote's Ap
 - PowerPoint files are imported by Keynote. Text extraction therefore reflects what Keynote can import from unsupported PowerPoint effects or objects.
 - Object order follows Keynote's AppleScript object order and may not match visual reading order.
 - Text hyperlinks are listed as `[超連結] label：URL`; duplicate items on the same slide are removed. Click actions attached to images or shapes are excluded.
-- OCR reads the full exported image and may include cropped or covered content. Native text and image text may overlap.
+- OCR and image export use the full exported image and may include cropped or covered content. Native text and image text may overlap. Exported media can include image fills and video preview images; these are not screenshots of the slide's visible image area.
 - External linked images are not downloaded. Video and audio are not transcribed.
 - Master-layout content that Keynote does not expand into a slide is outside the extraction scope.
 - Presenter notes are disabled by default. Developers can set `includePresenterNotes` to `true` in the core and rebuild.
@@ -181,7 +189,7 @@ Keynote Text Extractor 會透過 Keynote 逐頁讀取 Keynote (`.key`) 與 Power
 - 透過 Keynote 開啟 `.key` 與 `.pptx` 簡報。
 - 擷取標題、內文預留位置、文字方塊、形狀、表格與群組物件中的文字。
 - 將文字超連結列在所屬投影片中。
-- 可將圖片交給 **提取圖片文字** 捷徑，或完全跳過所有圖片。
+- 可選擇透過 **提取圖片文字** 捷徑辨識圖片、跳過圖片，或直接取出圖檔而不執行 OCR。
 - 結果內文會省略空白 OCR、`未辨識到文字`、OCR 失敗與圖片處理警告。
 - 每完成一頁就更新輸出檔，即使處理中止也能保留已完成的內容。
 - 不會更改來源簡報。
@@ -204,7 +212,7 @@ Keynote Text Extractor 會透過 Keynote 逐頁讀取 Keynote (`.key`) 與 Power
 2. 使用「腳本編輯器」開啟。
 3. 按下「執行」。
 4. 選擇 `.key` 或 `.pptx` 簡報。
-5. 選擇「辨識圖片」執行圖片 OCR，或選擇「跳過圖片」忽略所有圖片。
+5. 從清單選擇「辨識圖片」、「跳過圖片」或「取出圖片」，再按「繼續」。
 6. 選擇一個新的 `.txt` 輸出檔案。
 
 編譯完成的 `.scpt` 已內嵌擷取核心，一般使用者只需要這一個檔案。
@@ -235,6 +243,14 @@ osascript ExtractKeynoteText.scpt '/簡報路徑/課程.pptx' --skip-images
 osascript ExtractKeynoteText.scpt '/簡報路徑/課程.key' '/輸出路徑/結果.txt'
 ```
 
+取出圖片而不執行 OCR：
+
+```sh
+osascript ExtractKeynoteText.scpt '/簡報路徑/課程.pptx' '/輸出路徑/結果.txt' --export-images
+```
+
+這會在 `結果.txt` 旁建立 `結果_圖片/` 資料夾。圖檔依投影片頁數與圖片序號命名，例如 `page_003_image_001.png`，並保留匯出媒體的格式。TXT 每頁會列出相對路徑，例如 `[圖片 1] 結果_圖片/page_003_image_001.png`；移動結果時請一起搬移 TXT 與圖片資料夾。資料夾名稱若已存在，會加上新的數字尾碼。此模式不論圖片是否有文字都會存檔，不需要 OCR 捷徑，也不存取剪貼簿。`--export-images` 不可與 `--skip-images` 同時使用。
+
 未指定輸出路徑時，腳本會建立 `<簡報名稱>_文字.txt`。如果檔名已存在，會依序改用 `_文字_2.txt`、`_文字_3.txt`。若明確指定輸出路徑，該檔案不可已經存在。
 
 <a id="zh-output"></a>
@@ -255,7 +271,7 @@ UTF-8 報告會包含來源路徑、投影片頁數、處理狀態、每頁內�
 從第二張圖片辨識出的文字
 ```
 
-只有 OCR 回傳有效文字時才會出現圖片項目。腳本會刻意排除 `【圖片 OCR】` 標題、無文字回覆、OCR 錯誤與圖片處理警告。
+辨識模式只有在 OCR 回傳有效文字時才會出現圖片項目；取出圖片模式則列出成功儲存的圖檔路徑。腳本會刻意排除 `【圖片 OCR】` 標題、無文字回覆、OCR 錯誤與圖片處理警告。圖檔複製失敗會累計警告次數；處理中止時仍保留已取出的圖片。
 
 <a id="zh-shortcut"></a>
 
@@ -278,7 +294,7 @@ shortcuts run '提取圖片文字' --input-path '/圖片路徑/image.png'
 1. Keynote 開啟來源簡報，腳本透過 AppleScript 讀取原生投影片物件。
 2. 腳本匯出暫存 PPTX，並使用 macOS 內建的 `ditto` 解開。
 3. 它依照 `presentation.xml` 關聯保留正確頁序，並將文字超連結與內嵌圖片配回所屬投影片。
-4. 啟用 OCR 時，腳本會處理每頁引用的圖片，並快取跨頁共用的媒體辨識結果。
+4. 啟用 OCR 時，腳本會處理每頁引用的圖片，並快取跨頁共用的媒體辨識結果。取出圖片模式則將圖片複製到輸出資料夾；跨頁共用圖片會依各頁另存不同檔名，同頁重複引用同一媒體只存一次。
 5. 每完成一頁就寫入進度；正常完成後會移除暫存檔案。
 
 使用暫存 PPTX 是為了避開 Keynote AppleScript 介面中不穩定的圖片 `file` 屬性，也能區分原始檔名相同的多張圖片。
@@ -290,7 +306,7 @@ shortcuts run '提取圖片文字' --input-path '/圖片路徑/image.png'
 - PowerPoint 檔案會先由 Keynote 匯入；若內容含 Keynote 不支援的 PowerPoint 效果或物件，擷取結果以 Keynote 能匯入的內容為準。
 - 物件順序依 Keynote 的 AppleScript 物件順序排列，可能與畫面閱讀順序不同。
 - 文字超連結以 `[超連結] 顯示文字：URL` 顯示，同頁重複項目會去除；圖片或形狀本身的點擊動作不列入。
-- OCR 會讀取完整的匯出圖片，因此可能包含被裁切或遮住的內容；原生文字與圖片文字也可能重複。
+- OCR 與取出圖片使用完整的匯出圖片，因此可能包含被裁切或遮住的內容；原生文字與圖片文字也可能重複。匯出媒體可能包含形狀圖片填滿及影片預覽圖，並非投影片中可見圖片區域的截圖。
 - 不會下載外部連結圖片，也不會轉錄影片或音訊。
 - Keynote 未展開至個別投影片的母片或版面內容不在擷取範圍。
 - 講者備忘稿預設關閉。開發者可在核心將 `includePresenterNotes` 設為 `true` 後重新建置。
