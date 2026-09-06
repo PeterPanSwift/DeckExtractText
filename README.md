@@ -83,7 +83,7 @@ Export images without OCR:
 osascript ExtractKeynoteText.scpt '/path/to/presentation.pptx' '/path/to/result.txt' --export-images
 ```
 
-This creates `result_圖片/` beside `result.txt`. Files are named by slide and image number, for example `page_003_image_001.png`, retaining the exported media format. Each slide's TXT section lists relative paths such as `[圖片 1] result_圖片/page_003_image_001.png`. Keep the TXT and image folder together when moving them. If the folder name exists, a new suffix is added. Images are saved regardless of whether they contain text; this mode needs no OCR Shortcut and does not access the clipboard. Do not combine `--export-images` with `--skip-images`.
+This creates `result_圖片/` beside `result.txt`. Files are named by slide and image number, for example `page_003_image_001.png`, automatically converting `.tif` / `.tiff` images to PNG (including uppercase extensions); other exported media formats are retained. Each slide's TXT section lists relative paths such as `[圖片 1] result_圖片/page_003_image_001.png`. Keep the TXT and image folder together when moving them. If the folder name exists, a new suffix is added. Images are saved regardless of whether they contain text; this mode needs no OCR Shortcut and does not access the clipboard. Do not combine `--export-images` with `--skip-images`.
 
 Without an explicit output path, the script creates `<presentation>_文字.txt`. If that name exists, it selects `_文字_2.txt`, `_文字_3.txt`, and so on. An explicitly selected output path must not already exist.
 
@@ -105,7 +105,7 @@ Course website
 Text recognized from the second image
 ```
 
-In OCR mode, image entries appear only when OCR returns useful text. Export mode lists successfully saved image paths instead. The script deliberately excludes the `【圖片 OCR】` heading, no-text responses, OCR errors, and image-processing warnings. Failed image copies contribute to the warning count; partial image exports remain available if extraction stops.
+In OCR mode, image entries appear only when OCR returns useful text. Export mode lists successfully saved image paths instead. The script deliberately excludes the `【圖片 OCR】` heading, no-text responses, OCR errors, and image-processing warnings. Failed image copies or conversions contribute to the warning count; partial image exports remain available if extraction stops.
 
 <a id="en-shortcut"></a>
 
@@ -249,7 +249,7 @@ osascript ExtractKeynoteText.scpt '/簡報路徑/課程.key' '/輸出路徑/結�
 osascript ExtractKeynoteText.scpt '/簡報路徑/課程.pptx' '/輸出路徑/結果.txt' --export-images
 ```
 
-這會在 `結果.txt` 旁建立 `結果_圖片/` 資料夾。圖檔依投影片頁數與圖片序號命名，例如 `page_003_image_001.png`，並保留匯出媒體的格式。TXT 每頁會列出相對路徑，例如 `[圖片 1] 結果_圖片/page_003_image_001.png`；移動結果時請一起搬移 TXT 與圖片資料夾。資料夾名稱若已存在，會加上新的數字尾碼。此模式不論圖片是否有文字都會存檔，不需要 OCR 捷徑，也不存取剪貼簿。`--export-images` 不可與 `--skip-images` 同時使用。
+這會在 `結果.txt` 旁建立 `結果_圖片/` 資料夾。圖檔依投影片頁數與圖片序號命名，例如 `page_003_image_001.png`，遇到 `.tif`／`.tiff`（含大寫副檔名）會自動轉成 PNG，其他格式則保留匯出媒體的格式。TXT 每頁會列出相對路徑，例如 `[圖片 1] 結果_圖片/page_003_image_001.png`；移動結果時請一起搬移 TXT 與圖片資料夾。資料夾名稱若已存在，會加上新的數字尾碼。此模式不論圖片是否有文字都會存檔，不需要 OCR 捷徑，也不存取剪貼簿。`--export-images` 不可與 `--skip-images` 同時使用。
 
 未指定輸出路徑時，腳本會建立 `<簡報名稱>_文字.txt`。如果檔名已存在，會依序改用 `_文字_2.txt`、`_文字_3.txt`。若明確指定輸出路徑，該檔案不可已經存在。
 
@@ -271,7 +271,7 @@ UTF-8 報告會包含來源路徑、投影片頁數、處理狀態、每頁內�
 從第二張圖片辨識出的文字
 ```
 
-辨識模式只有在 OCR 回傳有效文字時才會出現圖片項目；取出圖片模式則列出成功儲存的圖檔路徑。腳本會刻意排除 `【圖片 OCR】` 標題、無文字回覆、OCR 錯誤與圖片處理警告。圖檔複製失敗會累計警告次數；處理中止時仍保留已取出的圖片。
+辨識模式只有在 OCR 回傳有效文字時才會出現圖片項目；取出圖片模式則列出成功儲存的圖檔路徑。腳本會刻意排除 `【圖片 OCR】` 標題、無文字回覆、OCR 錯誤與圖片處理警告。圖檔複製或轉換失敗會累計警告次數；處理中止時仍保留已取出的圖片。
 
 <a id="zh-shortcut"></a>
 

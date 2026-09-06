@@ -191,8 +191,27 @@ end createImageFolder
 on exportImage(mediaPath, imageFolder, pageIndex, imageIndex)
 	if mediaPath starts with "WARNING:" then return ""
 	set extensionText to (current application's NSString's stringWithString:mediaPath)'s pathExtension() as text
+	set normalizedExtension to (current application's NSString's stringWithString:extensionText)'s lowercaseString() as text
+	set convertTIFF to normalizedExtension is in {"tif", "tiff"}
+	if convertTIFF then set extensionText to "png"
 	set imageName to "page_" & my paddedIndex(pageIndex) & "_image_" & my paddedIndex(imageIndex)
 	if extensionText is not "" then set imageName to imageName & "." & extensionText
+	if convertTIFF then
+		try
+			set bitmapImage to current application's NSBitmapImageRep's imageRepWithContentsOfFile:mediaPath
+			if bitmapImage is missing value then error "無法讀取 TIFF 圖片。"
+			set pngData to bitmapImage's representationUsingType:(current application's NSBitmapImageFileTypePNG) |properties|:(current application's NSDictionary's dictionary())
+			if pngData is missing value then error "無法轉換成 PNG。"
+			-- 不覆寫已存在的圖檔；只有成功轉換後才在 TXT 列出 PNG 名稱。
+			set {didWrite, writeError} to pngData's writeToFile:(imageFolder & "/" & imageName) options:(current application's NSDataWritingWithoutOverwriting) |error|:(reference)
+			if not (didWrite as boolean) then error "無法儲存 PNG。"
+			return imageName
+		on error errorMessage number errorNumber
+			if errorNumber = -128 then error errorMessage number errorNumber
+			set warningCount to warningCount + 1
+			return ""
+		end try
+	end if
 	set {didCopy, copyError} to fm's copyItemAtPath:mediaPath toPath:(imageFolder & "/" & imageName) |error|:(reference)
 	if not (didCopy as boolean) then
 		set warningCount to warningCount + 1
