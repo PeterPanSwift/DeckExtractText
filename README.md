@@ -23,7 +23,7 @@ Keynote Text Extractor reads each slide from Keynote (`.key`) and PowerPoint (`.
 - Opens `.key` and `.pptx` presentations through Keynote.
 - Extracts text from titles, body placeholders, text boxes, shapes, tables, and grouped objects.
 - Lists text hyperlinks on their corresponding slides.
-- Choose image OCR with the **提取圖片文字** Shortcut, skip images, or export image files without OCR.
+- Choose image OCR with the **提取圖片文字** Shortcut, skip images, or export image files without OCR. Image export excludes slide backgrounds.
 - Omits empty OCR results, `未辨識到文字`, OCR failures, and image-processing warnings from the output body.
 - Updates the output file after every completed slide, so partial progress is retained if processing stops.
 - Leaves the source presentation unchanged.
@@ -140,7 +140,7 @@ This snapshot approach avoids unreliable image `file` properties in Keynote's Ap
 - PowerPoint files are imported by Keynote. Text extraction therefore reflects what Keynote can import from unsupported PowerPoint effects or objects.
 - Object order follows Keynote's AppleScript object order and may not match visual reading order.
 - Text hyperlinks are listed as `[超連結] label：URL`; duplicate items on the same slide are removed. Click actions attached to images or shapes are excluded.
-- OCR and image export use the full exported image and may include cropped or covered content. Native text and image text may overlap. Exported media can include image fills and video preview images; these are not screenshots of the slide's visible image area.
+- OCR and image export use the full exported image and may include cropped or covered content. Native text and image text may overlap. Exported media can include image fills and video preview images; these are not screenshots of the slide's visible image area. Image export excludes images defined as slide backgrounds; an ordinary image placed behind other objects is still a slide object and is retained.
 - External linked images are not downloaded. Video and audio are not transcribed.
 - Master-layout content that Keynote does not expand into a slide is outside the extraction scope.
 - Presenter notes are disabled by default. Developers can set `includePresenterNotes` to `true` in the core and rebuild.
@@ -189,7 +189,7 @@ Keynote Text Extractor 會透過 Keynote 逐頁讀取 Keynote (`.key`) 與 Power
 - 透過 Keynote 開啟 `.key` 與 `.pptx` 簡報。
 - 擷取標題、內文預留位置、文字方塊、形狀、表格與群組物件中的文字。
 - 將文字超連結列在所屬投影片中。
-- 可選擇透過 **提取圖片文字** 捷徑辨識圖片、跳過圖片，或直接取出圖檔而不執行 OCR。
+- 可選擇透過 **提取圖片文字** 捷徑辨識圖片、跳過圖片，或直接取出圖檔而不執行 OCR。取出圖片時會排除投影片背景。
 - 結果內文會省略空白 OCR、`未辨識到文字`、OCR 失敗與圖片處理警告。
 - 每完成一頁就更新輸出檔，即使處理中止也能保留已完成的內容。
 - 不會更改來源簡報。
@@ -306,7 +306,7 @@ shortcuts run '提取圖片文字' --input-path '/圖片路徑/image.png'
 - PowerPoint 檔案會先由 Keynote 匯入；若內容含 Keynote 不支援的 PowerPoint 效果或物件，擷取結果以 Keynote 能匯入的內容為準。
 - 物件順序依 Keynote 的 AppleScript 物件順序排列，可能與畫面閱讀順序不同。
 - 文字超連結以 `[超連結] 顯示文字：URL` 顯示，同頁重複項目會去除；圖片或形狀本身的點擊動作不列入。
-- OCR 與取出圖片使用完整的匯出圖片，因此可能包含被裁切或遮住的內容；原生文字與圖片文字也可能重複。匯出媒體可能包含形狀圖片填滿及影片預覽圖，並非投影片中可見圖片區域的截圖。
+- OCR 與取出圖片使用完整的匯出圖片，因此可能包含被裁切或遮住的內容；原生文字與圖片文字也可能重複。匯出媒體可能包含形狀圖片填滿及影片預覽圖，並非投影片中可見圖片區域的截圖。取出圖片會排除設定為投影片背景的圖片；若一般圖片只是被放在其他物件後方，仍會視為頁面物件保留。
 - 不會下載外部連結圖片，也不會轉錄影片或音訊。
 - Keynote 未展開至個別投影片的母片或版面內容不在擷取範圍。
 - 講者備忘稿預設關閉。開發者可在核心將 `includePresenterNotes` 設為 `true` 後重新建置。

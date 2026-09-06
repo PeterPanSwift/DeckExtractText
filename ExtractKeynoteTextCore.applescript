@@ -130,7 +130,7 @@ on run argv
 				set hyperlinkText to my pageHyperlinks(pagePath)
 				if hyperlinkText is not "" then set pageText to pageText & linefeed & hyperlinkText
 				if processImages or exportImages then
-					set mediaPaths to my pageImages(pagePath, packageRoot)
+					set mediaPaths to my pageImages(pagePath, packageRoot, exportImages)
 				set imageText to ""
 				repeat with imageIndex from 1 to count of mediaPaths
 					set imageCount to imageCount + 1
@@ -315,12 +315,15 @@ on hyperlinkTarget(relsXML, relationID)
 end hyperlinkTarget
 
 -- 只取本頁 XML 真正引用的內嵌圖片，包含群組與形狀圖片填滿。
+-- 取出圖片時依 bg 節點排除背景；同一媒體仍用於頁面物件時保留。
 -- 保留原始圖片，OCR 可能讀到裁切範圍以外的字。
-on pageImages(pagePath, packageRoot)
+on pageImages(pagePath, packageRoot, excludeBackground)
 	set pageXML to my readXML(pagePath)
 	set pageRels to my relationships(pagePath)
-	set embeddedIDs to my nodes(pageXML, "//*[local-name()='blip']/@*[local-name()='embed']")
-	set linkedIDs to my nodes(pageXML, "//*[local-name()='blip']/@*[local-name()='link']")
+	set imageQuery to "//*[local-name()='blip']"
+	if excludeBackground then set imageQuery to imageQuery & "[not(ancestor::*[local-name()='bg'])]"
+	set embeddedIDs to my nodes(pageXML, imageQuery & "/@*[local-name()='embed']")
+	set linkedIDs to my nodes(pageXML, imageQuery & "/@*[local-name()='link']")
 	set paths to {}
 	repeat with idNode in embeddedIDs
 		set mediaPath to my relatedPath(pageRels, (idNode's stringValue() as text), pagePath, packageRoot)
